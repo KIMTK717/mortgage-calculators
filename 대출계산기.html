@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주택구입 대출 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --blue:#185FA5; --blue-light:#E6F1FB; --blue-dark:#0C447C;
+  --teal:#1D9E75; --teal-light:#E1F5EE; --teal-dark:#085041;
+  --coral:#D85A30;
+  --amber:#EF9F27; --amber-light:#FAEEDA; --amber-dark:#633806;
+  --red-light:#FCEBEB; --red-dark:#A32D2D;
+  --green-light:#EAF3DE; --green-dark:#3B6D11;
+  --warn-light:#FAEEDA; --warn-dark:#854F0B;
+  --purple-light:#EEEDFE; --purple-dark:#3C3489;
+  --gray-50:#F8F7F4; --gray-100:#F1EFE8; --gray-200:#D3D1C7;
+  --gray-400:#888780; --gray-600:#5F5E5A; --gray-900:#1A1A18;
+  --bg:#F8F7F4; --surface:#FFFFFF;
+  --border:rgba(0,0,0,0.1); --border-strong:rgba(0,0,0,0.18);
+  --text:#1A1A18; --text-muted:#5F5E5A; --text-faint:#888780;
+  --radius:10px; --radius-lg:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:0 0 60px;}
+
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:20px 0;margin-bottom:24px;}
+.header-inner{max-width:980px;margin:0 auto;padding:0 24px;display:flex;align-items:center;gap:14px;}
+.header-icon{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.header-icon svg{width:19px;height:19px;fill:white;}
+.header-text h1{font-size:18px;font-weight:700;letter-spacing:-0.3px;}
+.header-text p{font-size:12px;color:var(--text-muted);margin-top:1px;}
+.policy-badge{margin-left:auto;background:#FCEBEB;color:#A32D2D;border:1px solid #F09595;border-radius:99px;padding:3px 11px;font-size:11px;font-weight:700;white-space:nowrap;}
+
+.container{max-width:980px;margin:0 auto;padding:0 24px;display:grid;grid-template-columns:350px 1fr;gap:18px;align-items:start;}
+@media(max-width:780px){.container{grid-template-columns:1fr;}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;margin-bottom:14px;}
+.card:last-child{margin-bottom:0;}
+.card-title{font-size:11px;font-weight:700;color:var(--text-muted);letter-spacing:0.7px;text-transform:uppercase;margin-bottom:13px;padding-bottom:9px;border-bottom:1px solid var(--border);}
+
+.field{margin-bottom:11px;}
+.field:last-child{margin-bottom:0;}
+.field label{display:block;font-size:12px;font-weight:500;color:var(--text-muted);margin-bottom:5px;}
+.field input,.field select{width:100%;height:37px;padding:0 11px;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--gray-50);color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color 0.15s,background 0.15s;}
+.field input:focus,.field select:focus{border-color:var(--blue);background:white;}
+.field input[type=number]{font-family:'IBM Plex Mono',monospace;}
+.input-suffix{position:relative;}
+.input-suffix input{padding-right:36px;}
+.input-suffix span{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--text-faint);pointer-events:none;}
+
+.btn-group{display:grid;gap:6px;margin-bottom:11px;}
+.btn-group.cols3{grid-template-columns:1fr 1fr 1fr;}
+.btn-group.cols2{grid-template-columns:1fr 1fr;}
+.btn-group.cols4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.toggle-btn{border:1px solid var(--border-strong);border-radius:8px;padding:7px 4px;background:var(--gray-50);font-size:11px;font-family:'Noto Sans KR',sans-serif;color:var(--text-muted);cursor:pointer;text-align:center;transition:all 0.15s;line-height:1.4;}
+.toggle-btn.active-blue{background:var(--blue);border-color:var(--blue);color:white;font-weight:700;}
+.toggle-btn.active-teal{background:var(--teal);border-color:var(--teal);color:white;font-weight:700;}
+.toggle-btn.active-purple{background:#534AB7;border-color:#534AB7;color:white;font-weight:700;}
+.toggle-btn small{display:block;font-size:9px;opacity:0.75;margin-top:1px;}
+
+.rule-panel{border-radius:var(--radius);padding:11px 13px;margin-bottom:10px;font-size:12px;line-height:1.65;}
+.rule-panel.info{background:var(--blue-light);border:1px solid #B5D4F4;color:var(--blue-dark);}
+.rule-panel.warn{background:var(--red-light);border:1px solid #F7C1C1;color:var(--red-dark);}
+.rule-panel.ok{background:var(--green-light);border:1px solid #C0DD97;color:var(--green-dark);}
+.rule-panel strong{font-weight:700;}
+
+.stress-panel{background:var(--amber-light);border:1px solid var(--amber);border-radius:var(--radius);padding:12px 13px;margin-top:12px;}
+.stress-row{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:2px 0;}
+.stress-row .key{color:var(--amber-dark);}
+.stress-row .val{font-weight:500;color:#412402;font-family:'IBM Plex Mono',monospace;}
+.stress-row.total{border-top:1px solid var(--amber);margin-top:7px;padding-top:8px;}
+.stress-row.total .key{font-weight:700;color:var(--amber-dark);}
+.stress-row.total .val{font-size:14px;color:#854F0B;}
+
+.el-row{display:flex;gap:7px;align-items:center;margin-bottom:7px;}
+.el-row input{flex:1;height:34px;padding:0 10px;border:1px solid var(--border-strong);border-radius:8px;background:var(--gray-50);font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text);outline:none;}
+.el-row input:focus{border-color:var(--blue);background:white;}
+.btn-del{height:30px;width:30px;border:1px solid var(--border-strong);border-radius:8px;background:transparent;color:var(--text-faint);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background 0.15s,color 0.15s;flex-shrink:0;}
+.btn-del:hover{background:var(--red-light);color:var(--red-dark);border-color:#F09595;}
+
+.exist-loan{background:var(--gray-50);border:1px solid var(--border-strong);border-radius:var(--radius);padding:11px 12px;margin-bottom:8px;position:relative;}
+.exist-loan-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.exist-loan-title{font-size:12px;font-weight:700;color:var(--text-muted);}
+.exist-loan-result{font-size:12px;color:var(--blue);font-weight:500;font-family:'IBM Plex Mono',monospace;}
+.exist-loan-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.exist-loan-field{display:flex;flex-direction:column;gap:3px;}
+.exist-loan-field label{font-size:10px;color:var(--text-faint);font-weight:500;}
+.exist-loan-field input,.exist-loan-field select{height:32px;padding:0 9px;border:1px solid var(--border-strong);border-radius:7px;background:white;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;width:100%;}
+.exist-loan-field input[type=number]{font-family:'IBM Plex Mono',monospace;}
+.exist-loan-field input:focus,.exist-loan-field select:focus{border-color:var(--blue);}
+.exist-loan-total{margin-top:10px;padding-top:8px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:11px;}
+.exist-loan-total .tlabel{color:var(--text-faint);}
+.exist-loan-total .tval{font-size:13px;font-weight:700;color:var(--blue);font-family:'IBM Plex Mono',monospace;}
+.existing-summary{background:var(--blue-light);border:1px solid #B5D4F4;border-radius:var(--radius);padding:9px 12px;margin-bottom:6px;display:none;font-size:12px;color:var(--blue-dark);}
+.existing-summary strong{font-weight:700;}
+
+
+.addr-search-wrap{position:relative;margin-bottom:10px;}
+.addr-search-input{width:100%;height:37px;padding:0 36px 0 11px;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--gray-50);color:var(--text);font-size:14px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color 0.15s,background 0.15s;}
+.addr-search-input:focus{border-color:var(--blue);background:white;}
+.addr-search-icon{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--text-faint);pointer-events:none;}
+.addr-result{border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);margin-top:4px;overflow:hidden;display:none;}
+.addr-result-item{padding:9px 12px;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);}
+.addr-result-item:last-child{border-bottom:none;}
+.addr-result-item:hover{background:var(--blue-light);}
+.addr-result-name{color:var(--text);font-weight:500;}
+.addr-result-type{font-size:10px;padding:2px 7px;border-radius:99px;font-weight:700;}
+.addr-result-type.regulated{background:var(--red-light);color:var(--red-dark);}
+.addr-result-type.metro{background:var(--blue-light);color:var(--blue-dark);}
+.addr-result-type.local{background:var(--green-light);color:var(--green-dark);}
+.addr-selected{background:var(--gray-50);border:1px solid var(--border-strong);border-radius:var(--radius);padding:9px 12px;font-size:12px;margin-bottom:8px;display:none;align-items:center;gap:8px;}
+.addr-selected-name{font-weight:700;color:var(--text);flex:1;}
+.addr-clear{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:16px;padding:0;}
+
+.btn-add{display:inline-flex;align-items:center;gap:5px;background:none;border:1px dashed var(--border-strong);border-radius:8px;padding:5px 12px;font-size:12px;color:var(--blue);cursor:pointer;font-family:'Noto Sans KR',sans-serif;width:100%;justify-content:center;transition:background 0.15s;margin-top:2px;}
+.btn-add:hover{background:var(--blue-light);}
+
+/* 결과 영역 */
+.result-panel{display:flex;flex-direction:column;gap:12px;}
+
+.final-card{border-radius:var(--radius-lg);padding:18px 20px;color:white;}
+.final-card.normal{background:var(--blue);}
+.final-card.impossible{background:#5F5E5A;}
+.flabel{font-size:11px;opacity:0.75;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.fval{font-size:28px;font-weight:700;letter-spacing:-0.8px;font-family:'IBM Plex Mono',monospace;margin-bottom:3px;}
+.fsub{font-size:11px;opacity:0.65;}
+.fbound{margin-top:9px;padding-top:9px;border-top:1px solid rgba(255,255,255,0.2);font-size:11px;opacity:0.8;display:flex;gap:14px;flex-wrap:wrap;}
+
+.badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;}
+.badge.ok{background:var(--green-light);color:var(--green-dark);}
+.badge.warn{background:var(--warn-light);color:var(--warn-dark);}
+.badge.over{background:var(--red-light);color:var(--red-dark);}
+.badge.white{background:rgba(255,255,255,0.22);color:white;}
+
+.cap-alert{background:var(--red-light);border:1px solid #F09595;border-radius:var(--radius);padding:10px 13px;font-size:12px;color:var(--red-dark);line-height:1.6;display:none;}
+.cap-alert strong{font-weight:700;}
+
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 13px;}
+.mlabel{font-size:11px;color:var(--text-faint);margin-bottom:3px;font-weight:500;}
+.mval{font-size:15px;font-weight:700;color:var(--text);font-family:'IBM Plex Mono',monospace;letter-spacing:-0.3px;}
+.msub{font-size:10px;color:var(--text-faint);margin-top:2px;}
+
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;}
+.chart-title{font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:0.3px;margin-bottom:8px;}
+.legend{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:9px;}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted);}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+
+/* 상환 방식 카드 */
+.repay-method-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px;}
+.repay-method-title{font-size:12px;font-weight:700;color:var(--text-muted);letter-spacing:0.3px;margin-bottom:10px;}
+.repay-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px;}
+.repay-tab{border:1px solid var(--border-strong);border-radius:8px;padding:7px 4px;background:var(--gray-50);font-size:10px;font-family:'Noto Sans KR',sans-serif;color:var(--text-muted);cursor:pointer;text-align:center;transition:all 0.15s;line-height:1.4;}
+.repay-tab.active{background:#534AB7;border-color:#534AB7;color:white;font-weight:700;}
+.repay-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+.repay-metric{background:var(--gray-50);border-radius:8px;padding:10px 12px;}
+.repay-metric .rlabel{font-size:10px;color:var(--text-faint);margin-bottom:3px;}
+.repay-metric .rval{font-size:14px;font-weight:700;color:var(--text);font-family:'IBM Plex Mono',monospace;}
+.repay-metric .rsub{font-size:10px;color:var(--text-faint);margin-top:2px;}
+.repay-note{font-size:11px;color:var(--text-faint);line-height:1.6;padding:9px 12px;background:var(--gray-50);border-radius:8px;margin-bottom:12px;}
+.repay-note strong{color:var(--text-muted);font-weight:500;}
+
+.repay-table-wrap{overflow-x:auto;}
+table.repay-table{width:100%;border-collapse:collapse;font-size:12px;}
+table.repay-table th{background:var(--gray-100);color:var(--text-muted);font-weight:700;padding:7px 10px;text-align:right;font-size:11px;border-bottom:1px solid var(--border);}
+table.repay-table th:first-child{text-align:center;}
+table.repay-table td{padding:6px 10px;text-align:right;border-bottom:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text);}
+table.repay-table td:first-child{text-align:center;font-family:'Noto Sans KR',sans-serif;color:var(--text-faint);}
+table.repay-table tr:last-child td{border-bottom:none;}
+table.repay-table tr:hover td{background:var(--blue-light);}
+table.repay-table .sum-row td{font-weight:700;background:var(--gray-100);border-top:1px solid var(--border);}
+.repay-pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--text-muted);}
+.page-btn{border:1px solid var(--border-strong);border-radius:6px;background:transparent;padding:4px 10px;font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;color:var(--text-muted);transition:background 0.15s;}
+.page-btn:hover{background:var(--blue-light);color:var(--blue);}
+.page-btn:disabled{opacity:0.4;cursor:default;}
+
+footer{max-width:980px;margin:20px auto 0;padding:0 24px;font-size:11px;color:var(--text-faint);line-height:1.8;}
+.tag{display:inline-block;font-size:10px;padding:2px 7px;border-radius:99px;margin-right:3px;margin-bottom:3px;}
+.tag.blue{background:var(--blue-light);color:var(--blue-dark);}
+.tag.amber{background:var(--amber-light);color:var(--amber-dark);}
+.tag.teal{background:var(--teal-light);color:var(--teal-dark);}
+.tag.red{background:var(--red-light);color:var(--red-dark);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-icon">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>주택구입 대출 계산기</h1>
+      <p>10.15 대책 · 스트레스 DSR 3단계 · 지역별 규제 · 상환방식별 분석</p>
+    </div>
+    <div class="policy-badge">10.15 대책 반영</div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- ── 왼쪽 입력 ── -->
+  <div>
+
+    <div class="card">
+      <div class="card-title">지역 · 주택 보유 현황</div>
+
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:500;">주택 소재지 검색</div>
+      <div class="addr-search-wrap">
+        <input class="addr-search-input" id="addrSearch" type="text" placeholder="시·구·동 검색 (예: 강남구, 과천, 분당)" oninput="searchAddr(this.value)" autocomplete="off">
+        <svg class="addr-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        <div class="addr-result" id="addrResult"></div>
+      </div>
+      <div class="addr-selected" id="addrSelected">
+        <span class="addr-selected-name" id="addrSelectedName">—</span>
+        <button class="addr-clear" onclick="clearAddrSearch()" title="초기화">×</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:500;">또는 직접 선택</div>
+      <div class="btn-group cols3">
+        <button class="toggle-btn" id="btn-regulated" onclick="setRegion('regulated')">규제지역<small>서울·경기 12곳</small></button>
+        <button class="toggle-btn active-blue" id="btn-metro" onclick="setRegion('metro')">수도권<small>비규제</small></button>
+        <button class="toggle-btn" id="btn-local" onclick="setRegion('local')">지방<small>비수도권</small></button>
+      </div>
+
+      <div id="regulatedInfo" class="rule-panel warn" style="display:none;">
+        <strong>규제지역</strong> · LTV 40% (생애최초 70%) · 스트레스 금리 3%p · 주담대 절대 상한 · 만기 30년 이내
+      </div>
+      <div id="metroInfo" class="rule-panel info">
+        <strong>수도권 비규제</strong> · LTV 70% · 스트레스 금리 1.5%p · 만기 30년 이내
+      </div>
+      <div id="localInfo" class="rule-panel ok" style="display:none;">
+        <strong>지방</strong> · LTV 80% · 스트레스 금리 0.75%p · 만기 40년 가능
+      </div>
+
+      <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;font-weight:500;">주택 보유 현황</div>
+      <div class="btn-group cols2">
+        <button class="toggle-btn active-teal" id="btn-first" onclick="setHousing('first')">생애최초<small>무주택 최초 구입</small></button>
+        <button class="toggle-btn" id="btn-none" onclick="setHousing('none')">무주택자<small>생애최초 아님</small></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">소득 및 대출 조건</div>
+
+      <div class="field">
+        <label>연간 소득</label>
+        <div class="input-suffix">
+          <input type="number" id="income" value="5000" step="100" min="0" oninput="calc()">
+          <span>만원</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>주택 매매가격</label>
+        <div class="input-suffix">
+          <input type="number" id="housePrice" value="50000" step="1000" min="0" oninput="calc()">
+          <span>만원</span>
+        </div>
+      </div>
+      <div class="field">
+        <label style="display:flex;align-items:center;justify-content:space-between;">
+          <span>KB부동산 시세 <span style="font-size:10px;color:var(--text-faint);">(미입력 시 매매가 기준)</span></span>
+          <span id="kbBasisLabel" style="font-size:10px;font-weight:700;"></span>
+        </label>
+        <div class="input-suffix">
+          <input type="number" id="kbPrice" placeholder="KB시세 입력 (선택)" step="1000" min="0" oninput="calc()">
+          <span>만원</span>
+        </div>
+      </div>
+      <div id="kbNotice" style="display:none;background:#FAEEDA;border:1px solid #EF9F27;border-radius:8px;padding:8px 11px;font-size:11px;color:#633806;line-height:1.6;margin-top:-4px;margin-bottom:4px;">
+        <strong>KB시세 기준 LTV 적용</strong><br>
+        매매가 <span id="kbNoticeSale"></span> vs KB시세 <span id="kbNoticeKB"></span> →
+        낮은 금액인 <strong id="kbNoticeBasis"></strong> 기준으로 LTV 계산
+      </div>
+      <div class="field">
+        <label>실제 대출금리</label>
+        <div class="input-suffix">
+          <input type="number" id="rate" value="4.0" step="0.1" min="0.1" oninput="calc()">
+          <span>%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>대출 기간</label>
+        <select id="term" onchange="calc()">
+          <option value="10">10년</option>
+          <option value="20">20년</option>
+          <option value="30" selected>30년</option>
+          <option value="40">40년 (수도권·규제지역 불가)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>스트레스 DSR 단계</label>
+        <div class="btn-group cols3" style="margin-bottom:0;">
+          <button class="toggle-btn" id="btn-phase0" onclick="setPhase(0)">미적용<small>0%p</small></button>
+          <button class="toggle-btn active-blue" id="btn-phase1" onclick="setPhase(1)">2단계<small>50% 가산</small></button>
+          <button class="toggle-btn" id="btn-phase2" onclick="setPhase(2)">3단계<small>100% 가산</small></button>
+        </div>
+      </div>
+      <div class="field">
+        <label>DSR 한도</label>
+        <select id="dsrLimit" onchange="calc()">
+          <option value="40" selected>40% (은행권)</option>
+          <option value="50">50% (상호금융)</option>
+        </select>
+      </div>
+
+      <div class="stress-panel">
+        <div class="stress-row"><span class="key">실제 대출금리</span><span class="val" id="s-rate">4.00%</span></div>
+        <div class="stress-row"><span class="key">스트레스 금리 고시값</span><span class="val" id="s-base">1.5%p</span></div>
+        <div class="stress-row"><span class="key">단계별 가산금리</span><span class="val" id="s-add">+0.75%p (2단계 50%)</span></div>
+        <div class="stress-row total">
+          <span class="key">DSR 산정 적용금리</span>
+          <span class="val" id="s-total">4.75%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">기존 대출 현황</div>
+      <div class="existing-summary" id="existingSummary"></div>
+      <div id="existingLoans"></div>
+      <button class="btn-add" onclick="addLoan()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        기존 대출 추가
+      </button>
+    </div>
+
+  </div>
+
+  <!-- ── 오른쪽 결과 ── -->
+  <div class="result-panel">
+
+    <div id="capAlert" class="cap-alert">
+      <strong>⚠ 10.15 대책 — 주담대 절대 한도 적용</strong><br>
+      <span id="capAlertDetail"></span>
+    </div>
+
+    <div class="final-card normal" id="finalCard">
+      <div class="flabel">
+        실제 대출 가능 금액
+        <span id="badge" class="badge white">여유</span>
+      </div>
+      <div class="fval" id="finalVal">—</div>
+      <div class="fsub" id="finalSub">계산 중...</div>
+      <div class="fbound" id="finalBound"></div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric">
+        <div class="mlabel">LTV 기준 한도</div>
+        <div class="mval" id="ltvResult">—</div>
+        <div class="msub" id="ltvSub">—</div>
+      </div>
+      <div class="metric">
+        <div class="mlabel">DSR 기준 한도</div>
+        <div class="mval" id="dsrResult">—</div>
+        <div class="msub" id="dsrSub">스트레스 금리 적용</div>
+      </div>
+      <div class="metric">
+        <div class="mlabel">주담대 절대 상한 <span style="font-size:9px;background:#FCEBEB;color:#A32D2D;padding:1px 4px;border-radius:4px;">10.15</span></div>
+        <div class="mval" id="capResult">해당 없음</div>
+        <div class="msub" id="capSub">—</div>
+      </div>
+      <div class="metric">
+        <div class="mlabel">연간 상환 여력</div>
+        <div class="mval" id="availResult">—</div>
+        <div class="msub">소득 × DSR% − 기존상환</div>
+      </div>
+    </div>
+
+    <!-- 차트 -->
+    <div class="chart-card">
+      <div class="chart-title">대출 한도 비교</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#185FA5;"></span>LTV 한도</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>DSR 한도</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#D85A30;"></span>실제 대출 가능</span>
+        <span class="legend-item"><span class="legend-dot" style="background:rgba(216,90,48,0.35);"></span>절대 상한</span>
+      </div>
+      <div style="position:relative;width:100%;height:190px;"><canvas id="barChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">DSR 구성 현황 (%)</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#185FA5;"></span>기존 대출</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>신규 대출</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#D3D1C7;"></span>잔여 여력</span>
+      </div>
+      <div style="position:relative;width:100%;height:100px;"><canvas id="dsrChart"></canvas></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-title">소득 대비 연간 상환액 구조 (만원/년)</div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#185FA5;"></span>기존 상환액</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#1D9E75;"></span>신규 상환액</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#D3D1C7;"></span>여유분</span>
+      </div>
+      <div style="position:relative;width:100%;height:90px;"><canvas id="repayChart"></canvas></div>
+    </div>
+
+    <!-- 상환방식 분석 -->
+    <div class="repay-method-card">
+      <div class="repay-method-title">상환방식별 원금 · 이자 분석</div>
+
+      <div class="repay-tabs">
+        <button class="repay-tab active" id="rtab-equal-pmt" onclick="setRepayMethod('equal-pmt')">원리금<br>균등분할</button>
+        <button class="repay-tab" id="rtab-equal-pri" onclick="setRepayMethod('equal-pri')">원금<br>균등분할</button>
+        <button class="repay-tab" id="rtab-bullet" onclick="setRepayMethod('bullet')">만기<br>일시상환</button>
+        <button class="repay-tab" id="rtab-graduated" onclick="setRepayMethod('graduated')">체증식<br>분할상환</button>
+      </div>
+
+      <div class="repay-summary">
+        <div class="repay-metric"><div class="rlabel">월 초회 상환액</div><div class="rval" id="rm-first">—</div><div class="rsub" id="rm-first-sub">원금+이자</div></div>
+        <div class="repay-metric"><div class="rlabel">총 상환 이자</div><div class="rval" id="rm-interest">—</div><div class="rsub" id="rm-int-sub">전체 기간</div></div>
+        <div class="repay-metric"><div class="rlabel">총 상환액</div><div class="rval" id="rm-total">—</div><div class="rsub" id="rm-total-sub">원금+이자 합계</div></div>
+      </div>
+
+      <div class="repay-note" id="repayNote">—</div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-muted);">회차별 상환 내역</div>
+        <div style="font-size:11px;color:var(--text-faint);" id="pageInfo">1 / 1</div>
+      </div>
+
+      <div class="repay-table-wrap">
+        <table class="repay-table">
+          <thead>
+            <tr>
+              <th style="text-align:center;">회차</th>
+              <th>월 상환액</th>
+              <th>원금 상환</th>
+              <th>이자 납부</th>
+              <th>잔여 원금</th>
+            </tr>
+          </thead>
+          <tbody id="repayTbody"></tbody>
+        </table>
+      </div>
+
+      <div class="repay-pagination">
+        <button class="page-btn" id="btnPrev" onclick="changePage(-1)">← 이전</button>
+        <span id="pageLabel">1페이지</span>
+        <button class="page-btn" id="btnNext" onclick="changePage(1)">다음 →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <span class="tag blue">생애최초 LTV</span>
+  <span class="tag amber">스트레스 DSR</span>
+  <span class="tag red">10.15 대책</span>
+  <span class="tag teal">지역별 차등</span><br>
+  · 규제지역: LTV 40%(생애최초 70%), 스트레스 3%p, 주담대 절대 상한(15억↓→6억 / 15~25억→4억 / 25억↑→2억), 만기 30년<br>
+  · 수도권 비규제: LTV 70%, 스트레스 1.5%p / 지방: LTV 80%, 스트레스 0.75%p<br>
+  · 본 계산기는 참고용이며 실제 대출 가능 금액은 금융기관별 심사 기준에 따라 달라질 수 있습니다.
+</footer>
+
+<div style="max-width:980px;margin:20px auto 0;padding:16px 24px;border-top:1px solid rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:32px;height:32px;background:#1A1A18;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <span style="color:white;font-size:11px;font-weight:700;font-family:'IBM Plex Mono',monospace;letter-spacing:-0.5px;">TK</span>
+    </div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#1A1A18;font-family:'Noto Sans KR',sans-serif;letter-spacing:0.3px;">KIMTK</div>
+      <div style="font-size:11px;color:#888780;margin-top:1px;">주택구입 대출 계산기 제작자</div>
+    </div>
+  </div>
+  <div style="font-size:11px;color:#888780;text-align:right;line-height:1.7;">
+    © 2026 KIMTK. All rights reserved.<br>
+    <span style="color:#A32D2D;font-weight:500;">본 자료는 무단 배포 및 상업적 이용을 금지합니다.</span>
+  </div>
+</div>
+
+<script>
+/* ── 상태 ── */
+let currentRegion = 'metro';
+let currentHousing = 'first';
+let currentPhase = 1;       // 0=미적용, 1=2단계(50%), 2=3단계(100%)
+let currentRepayMethod = 'equal-pmt';
+let loanCount = 0;
+let allYearRows = [];
+let currentPage = 1;
+const PAGE_SIZE = 10;
+let lastCalcParams = null; // { finalLoan, rate, effectiveTerm }
+
+const REGION_PARAMS = {
+  regulated:{ stressBase:3.0,  phaseRatios:[0,0.50,1.0], termMax:30, ltvNormal:40, ltvFirst:70, hasAbsCap:true,  label:'규제지역' },
+  metro:    { stressBase:1.5,  phaseRatios:[0,0.50,1.0], termMax:30, ltvNormal:70, ltvFirst:70, hasAbsCap:false, label:'수도권(비규제)' },
+  local:    { stressBase:0.75, phaseRatios:[0,0.50,1.0], termMax:40, ltvNormal:80, ltvFirst:80, hasAbsCap:false, label:'지방' },
+};
+
+const PHASE_LABELS = ['미적용','2단계(50% 가산)','3단계(100% 가산)'];
+
+function getAbsCap(priceMan){
+  const p=priceMan/10000;
+  if(p<=15) return 6*10000;
+  if(p<=25) return 4*10000;
+  return 2*10000;
+}
+
+
+/* ── 주소 검색 DB (10.15 기준) ── */
+const ADDR_DB = [
+  // 서울 25개 구 (전체 규제지역)
+  {name:'강남구',full:'서울 강남구',type:'regulated'},
+  {name:'강동구',full:'서울 강동구',type:'regulated'},
+  {name:'강북구',full:'서울 강북구',type:'regulated'},
+  {name:'강서구',full:'서울 강서구',type:'regulated'},
+  {name:'관악구',full:'서울 관악구',type:'regulated'},
+  {name:'광진구',full:'서울 광진구',type:'regulated'},
+  {name:'구로구',full:'서울 구로구',type:'regulated'},
+  {name:'금천구',full:'서울 금천구',type:'regulated'},
+  {name:'노원구',full:'서울 노원구',type:'regulated'},
+  {name:'도봉구',full:'서울 도봉구',type:'regulated'},
+  {name:'동대문구',full:'서울 동대문구',type:'regulated'},
+  {name:'동작구',full:'서울 동작구',type:'regulated'},
+  {name:'마포구',full:'서울 마포구',type:'regulated'},
+  {name:'서대문구',full:'서울 서대문구',type:'regulated'},
+  {name:'서초구',full:'서울 서초구',type:'regulated'},
+  {name:'성동구',full:'서울 성동구',type:'regulated'},
+  {name:'성북구',full:'서울 성북구',type:'regulated'},
+  {name:'송파구',full:'서울 송파구',type:'regulated'},
+  {name:'양천구',full:'서울 양천구',type:'regulated'},
+  {name:'영등포구',full:'서울 영등포구',type:'regulated'},
+  {name:'용산구',full:'서울 용산구',type:'regulated'},
+  {name:'은평구',full:'서울 은평구',type:'regulated'},
+  {name:'종로구',full:'서울 종로구',type:'regulated'},
+  {name:'중구',full:'서울 중구',type:'regulated'},
+  {name:'중랑구',full:'서울 중랑구',type:'regulated'},
+  // 경기 규제지역 12곳
+  {name:'과천시',full:'경기 과천시',type:'regulated'},
+  {name:'광명시',full:'경기 광명시',type:'regulated'},
+  {name:'성남시 분당구',full:'경기 성남시 분당구',type:'regulated'},
+  {name:'성남시 수정구',full:'경기 성남시 수정구',type:'regulated'},
+  {name:'성남시 중원구',full:'경기 성남시 중원구',type:'regulated'},
+  {name:'수원시 영통구',full:'경기 수원시 영통구',type:'regulated'},
+  {name:'수원시 장안구',full:'경기 수원시 장안구',type:'regulated'},
+  {name:'수원시 팔달구',full:'경기 수원시 팔달구',type:'regulated'},
+  {name:'안양시 동안구',full:'경기 안양시 동안구',type:'regulated'},
+  {name:'용인시 수지구',full:'경기 용인시 수지구',type:'regulated'},
+  {name:'의왕시',full:'경기 의왕시',type:'regulated'},
+  {name:'하남시',full:'경기 하남시',type:'regulated'},
+  // 경기 수도권 비규제 (주요 지역)
+  {name:'수원시 권선구',full:'경기 수원시 권선구',type:'metro'},
+  {name:'수원시 장안구',full:'경기 수원시 장안구',type:'regulated'},
+  {name:'고양시',full:'경기 고양시',type:'metro'},
+  {name:'용인시 기흥구',full:'경기 용인시 기흥구',type:'metro'},
+  {name:'용인시 처인구',full:'경기 용인시 처인구',type:'metro'},
+  {name:'성남시 중원구',full:'경기 성남시 중원구',type:'regulated'},
+  {name:'부천시',full:'경기 부천시',type:'metro'},
+  {name:'안산시',full:'경기 안산시',type:'metro'},
+  {name:'안양시 만안구',full:'경기 안양시 만안구',type:'metro'},
+  {name:'남양주시',full:'경기 남양주시',type:'metro'},
+  {name:'화성시',full:'경기 화성시',type:'metro'},
+  {name:'평택시',full:'경기 평택시',type:'metro'},
+  {name:'파주시',full:'경기 파주시',type:'metro'},
+  {name:'의정부시',full:'경기 의정부시',type:'metro'},
+  {name:'시흥시',full:'경기 시흥시',type:'metro'},
+  {name:'김포시',full:'경기 김포시',type:'metro'},
+  {name:'광주시',full:'경기 광주시',type:'metro'},
+  {name:'구리시',full:'경기 구리시',type:'metro'},
+  {name:'오산시',full:'경기 오산시',type:'metro'},
+  {name:'군포시',full:'경기 군포시',type:'metro'},
+  {name:'이천시',full:'경기 이천시',type:'metro'},
+  {name:'양주시',full:'경기 양주시',type:'metro'},
+  {name:'동두천시',full:'경기 동두천시',type:'metro'},
+  {name:'포천시',full:'경기 포천시',type:'metro'},
+  {name:'여주시',full:'경기 여주시',type:'metro'},
+  {name:'양평군',full:'경기 양평군',type:'metro'},
+  {name:'가평군',full:'경기 가평군',type:'metro'},
+  {name:'연천군',full:'경기 연천군',type:'metro'},
+  // 인천 (수도권 비규제)
+  {name:'인천 중구',full:'인천 중구',type:'metro'},
+  {name:'인천 동구',full:'인천 동구',type:'metro'},
+  {name:'인천 미추홀구',full:'인천 미추홀구',type:'metro'},
+  {name:'인천 연수구',full:'인천 연수구',type:'metro'},
+  {name:'인천 남동구',full:'인천 남동구',type:'metro'},
+  {name:'인천 부평구',full:'인천 부평구',type:'metro'},
+  {name:'인천 계양구',full:'인천 계양구',type:'metro'},
+  {name:'인천 서구',full:'인천 서구',type:'metro'},
+  {name:'인천 강화군',full:'인천 강화군',type:'metro'},
+  {name:'인천 옹진군',full:'인천 옹진군',type:'metro'},
+  // 부산광역시
+  {name:'부산',full:'부산광역시',type:'local'},
+  {name:'부산 중구',full:'부산 중구',type:'local'},
+  {name:'부산 서구',full:'부산 서구',type:'local'},
+  {name:'부산 동구',full:'부산 동구',type:'local'},
+  {name:'부산 영도구',full:'부산 영도구',type:'local'},
+  {name:'부산 부산진구',full:'부산 부산진구',type:'local'},
+  {name:'부산 동래구',full:'부산 동래구',type:'local'},
+  {name:'부산 남구',full:'부산 남구',type:'local'},
+  {name:'부산 북구',full:'부산 북구',type:'local'},
+  {name:'부산 해운대구',full:'부산 해운대구',type:'local'},
+  {name:'부산 사하구',full:'부산 사하구',type:'local'},
+  {name:'부산 금정구',full:'부산 금정구',type:'local'},
+  {name:'부산 강서구',full:'부산 강서구',type:'local'},
+  {name:'부산 연제구',full:'부산 연제구',type:'local'},
+  {name:'부산 수영구',full:'부산 수영구',type:'local'},
+  {name:'부산 사상구',full:'부산 사상구',type:'local'},
+  {name:'부산 기장군',full:'부산 기장군',type:'local'},
+  // 대구광역시
+  {name:'대구',full:'대구광역시',type:'local'},
+  {name:'대구 중구',full:'대구 중구',type:'local'},
+  {name:'대구 동구',full:'대구 동구',type:'local'},
+  {name:'대구 서구',full:'대구 서구',type:'local'},
+  {name:'대구 남구',full:'대구 남구',type:'local'},
+  {name:'대구 북구',full:'대구 북구',type:'local'},
+  {name:'대구 수성구',full:'대구 수성구',type:'local'},
+  {name:'대구 달서구',full:'대구 달서구',type:'local'},
+  {name:'대구 달성군',full:'대구 달성군',type:'local'},
+  // 대전광역시
+  {name:'대전',full:'대전광역시',type:'local'},
+  {name:'대전 동구',full:'대전 동구',type:'local'},
+  {name:'대전 중구',full:'대전 중구',type:'local'},
+  {name:'대전 서구',full:'대전 서구',type:'local'},
+  {name:'대전 유성구',full:'대전 유성구',type:'local'},
+  {name:'대전 대덕구',full:'대전 대덕구',type:'local'},
+  // 광주광역시
+  {name:'광주',full:'광주광역시',type:'local'},
+  {name:'광주 동구',full:'광주 동구',type:'local'},
+  {name:'광주 서구',full:'광주 서구',type:'local'},
+  {name:'광주 남구',full:'광주 남구',type:'local'},
+  {name:'광주 북구',full:'광주 북구',type:'local'},
+  {name:'광주 광산구',full:'광주 광산구',type:'local'},
+  // 울산광역시
+  {name:'울산',full:'울산광역시',type:'local'},
+  {name:'울산 중구',full:'울산 중구',type:'local'},
+  {name:'울산 남구',full:'울산 남구',type:'local'},
+  {name:'울산 동구',full:'울산 동구',type:'local'},
+  {name:'울산 북구',full:'울산 북구',type:'local'},
+  {name:'울산 울주군',full:'울산 울주군',type:'local'},
+  // 세종특별자치시
+  {name:'세종',full:'세종특별자치시',type:'local'},
+  // 강원도
+  {name:'강원',full:'강원특별자치도',type:'local'},
+  {name:'춘천',full:'강원 춘천시',type:'local'},
+  {name:'원주',full:'강원 원주시',type:'local'},
+  {name:'강릉',full:'강원 강릉시',type:'local'},
+  {name:'동해',full:'강원 동해시',type:'local'},
+  {name:'태백',full:'강원 태백시',type:'local'},
+  {name:'속초',full:'강원 속초시',type:'local'},
+  {name:'삼척',full:'강원 삼척시',type:'local'},
+  {name:'홍천군',full:'강원 홍천군',type:'local'},
+  {name:'횡성군',full:'강원 횡성군',type:'local'},
+  {name:'영월군',full:'강원 영월군',type:'local'},
+  {name:'평창군',full:'강원 평창군',type:'local'},
+  {name:'정선군',full:'강원 정선군',type:'local'},
+  {name:'철원군',full:'강원 철원군',type:'local'},
+  {name:'화천군',full:'강원 화천군',type:'local'},
+  {name:'양구군',full:'강원 양구군',type:'local'},
+  {name:'인제군',full:'강원 인제군',type:'local'},
+  {name:'고성군',full:'강원 고성군',type:'local'},
+  {name:'양양군',full:'강원 양양군',type:'local'},
+  // 충청북도
+  {name:'충북',full:'충청북도',type:'local'},
+  {name:'청주',full:'충북 청주시',type:'local'},
+  {name:'충주',full:'충북 충주시',type:'local'},
+  {name:'제천',full:'충북 제천시',type:'local'},
+  {name:'보은군',full:'충북 보은군',type:'local'},
+  {name:'옥천군',full:'충북 옥천군',type:'local'},
+  {name:'영동군',full:'충북 영동군',type:'local'},
+  {name:'증평군',full:'충북 증평군',type:'local'},
+  {name:'진천군',full:'충북 진천군',type:'local'},
+  {name:'괴산군',full:'충북 괴산군',type:'local'},
+  {name:'음성군',full:'충북 음성군',type:'local'},
+  {name:'단양군',full:'충북 단양군',type:'local'},
+  // 충청남도
+  {name:'충남',full:'충청남도',type:'local'},
+  {name:'천안',full:'충남 천안시',type:'local'},
+  {name:'공주',full:'충남 공주시',type:'local'},
+  {name:'보령',full:'충남 보령시',type:'local'},
+  {name:'아산',full:'충남 아산시',type:'local'},
+  {name:'서산',full:'충남 서산시',type:'local'},
+  {name:'논산',full:'충남 논산시',type:'local'},
+  {name:'계룡',full:'충남 계룡시',type:'local'},
+  {name:'당진',full:'충남 당진시',type:'local'},
+  {name:'금산군',full:'충남 금산군',type:'local'},
+  {name:'부여군',full:'충남 부여군',type:'local'},
+  {name:'서천군',full:'충남 서천군',type:'local'},
+  {name:'청양군',full:'충남 청양군',type:'local'},
+  {name:'홍성군',full:'충남 홍성군',type:'local'},
+  {name:'예산군',full:'충남 예산군',type:'local'},
+  {name:'태안군',full:'충남 태안군',type:'local'},
+  // 전라북도
+  {name:'전북',full:'전북특별자치도',type:'local'},
+  {name:'전주',full:'전북 전주시',type:'local'},
+  {name:'군산',full:'전북 군산시',type:'local'},
+  {name:'익산',full:'전북 익산시',type:'local'},
+  {name:'정읍',full:'전북 정읍시',type:'local'},
+  {name:'남원',full:'전북 남원시',type:'local'},
+  {name:'김제',full:'전북 김제시',type:'local'},
+  {name:'완주군',full:'전북 완주군',type:'local'},
+  {name:'진안군',full:'전북 진안군',type:'local'},
+  {name:'무주군',full:'전북 무주군',type:'local'},
+  {name:'장수군',full:'전북 장수군',type:'local'},
+  {name:'임실군',full:'전북 임실군',type:'local'},
+  {name:'순창군',full:'전북 순창군',type:'local'},
+  {name:'고창군',full:'전북 고창군',type:'local'},
+  {name:'부안군',full:'전북 부안군',type:'local'},
+  // 전라남도
+  {name:'전남',full:'전라남도',type:'local'},
+  {name:'목포',full:'전남 목포시',type:'local'},
+  {name:'여수',full:'전남 여수시',type:'local'},
+  {name:'순천',full:'전남 순천시',type:'local'},
+  {name:'나주',full:'전남 나주시',type:'local'},
+  {name:'광양',full:'전남 광양시',type:'local'},
+  {name:'담양군',full:'전남 담양군',type:'local'},
+  {name:'곡성군',full:'전남 곡성군',type:'local'},
+  {name:'구례군',full:'전남 구례군',type:'local'},
+  {name:'고흥군',full:'전남 고흥군',type:'local'},
+  {name:'보성군',full:'전남 보성군',type:'local'},
+  {name:'화순군',full:'전남 화순군',type:'local'},
+  {name:'장흥군',full:'전남 장흥군',type:'local'},
+  {name:'강진군',full:'전남 강진군',type:'local'},
+  {name:'해남군',full:'전남 해남군',type:'local'},
+  {name:'영암군',full:'전남 영암군',type:'local'},
+  {name:'무안군',full:'전남 무안군',type:'local'},
+  {name:'함평군',full:'전남 함평군',type:'local'},
+  {name:'영광군',full:'전남 영광군',type:'local'},
+  {name:'장성군',full:'전남 장성군',type:'local'},
+  {name:'완도군',full:'전남 완도군',type:'local'},
+  {name:'진도군',full:'전남 진도군',type:'local'},
+  {name:'신안군',full:'전남 신안군',type:'local'},
+  // 경상북도
+  {name:'경북',full:'경상북도',type:'local'},
+  {name:'포항',full:'경북 포항시',type:'local'},
+  {name:'경주',full:'경북 경주시',type:'local'},
+  {name:'김천',full:'경북 김천시',type:'local'},
+  {name:'안동',full:'경북 안동시',type:'local'},
+  {name:'구미',full:'경북 구미시',type:'local'},
+  {name:'영주',full:'경북 영주시',type:'local'},
+  {name:'영천',full:'경북 영천시',type:'local'},
+  {name:'상주',full:'경북 상주시',type:'local'},
+  {name:'문경',full:'경북 문경시',type:'local'},
+  {name:'경산',full:'경북 경산시',type:'local'},
+  {name:'군위군',full:'경북 군위군',type:'local'},
+  {name:'의성군',full:'경북 의성군',type:'local'},
+  {name:'청송군',full:'경북 청송군',type:'local'},
+  {name:'영양군',full:'경북 영양군',type:'local'},
+  {name:'영덕군',full:'경북 영덕군',type:'local'},
+  {name:'청도군',full:'경북 청도군',type:'local'},
+  {name:'고령군',full:'경북 고령군',type:'local'},
+  {name:'성주군',full:'경북 성주군',type:'local'},
+  {name:'칠곡군',full:'경북 칠곡군',type:'local'},
+  {name:'예천군',full:'경북 예천군',type:'local'},
+  {name:'봉화군',full:'경북 봉화군',type:'local'},
+  {name:'울진군',full:'경북 울진군',type:'local'},
+  {name:'울릉군',full:'경북 울릉군',type:'local'},
+  // 경상남도
+  {name:'경남',full:'경상남도',type:'local'},
+  {name:'창원',full:'경남 창원시',type:'local'},
+  {name:'진주',full:'경남 진주시',type:'local'},
+  {name:'통영',full:'경남 통영시',type:'local'},
+  {name:'사천',full:'경남 사천시',type:'local'},
+  {name:'김해',full:'경남 김해시',type:'local'},
+  {name:'밀양',full:'경남 밀양시',type:'local'},
+  {name:'거제',full:'경남 거제시',type:'local'},
+  {name:'양산',full:'경남 양산시',type:'local'},
+  {name:'의령군',full:'경남 의령군',type:'local'},
+  {name:'함안군',full:'경남 함안군',type:'local'},
+  {name:'창녕군',full:'경남 창녕군',type:'local'},
+  {name:'고성군',full:'경남 고성군',type:'local'},
+  {name:'남해군',full:'경남 남해군',type:'local'},
+  {name:'하동군',full:'경남 하동군',type:'local'},
+  {name:'산청군',full:'경남 산청군',type:'local'},
+  {name:'함양군',full:'경남 함양군',type:'local'},
+  {name:'거창군',full:'경남 거창군',type:'local'},
+  {name:'합천군',full:'경남 합천군',type:'local'},
+  // 제주특별자치도
+  {name:'제주',full:'제주특별자치도',type:'local'},
+  {name:'제주시',full:'제주 제주시',type:'local'},
+  {name:'서귀포시',full:'제주 서귀포시',type:'local'},
+];
+
+const REGION_TYPE_LABELS = {
+  regulated:'규제지역',
+  metro:'수도권(비규제)',
+  local:'지방'
+};
+
+function searchAddr(val){
+  const q=val.trim();
+  const resultBox=document.getElementById('addrResult');
+  if(q.length<1){resultBox.style.display='none';return;}
+  const matched=ADDR_DB.filter(a=>a.full.includes(q)||a.name.includes(q)).slice(0,6);
+  if(matched.length===0){
+    resultBox.style.display='block';
+    resultBox.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--text-faint);">검색 결과 없음</div>';
+    return;
+  }
+  resultBox.style.display='block';
+  resultBox.innerHTML=matched.map(a=>`
+    <div class="addr-result-item" onclick="selectAddr('${a.full}','${a.type}')">
+      <span class="addr-result-name">${a.full}</span>
+      <span class="addr-result-type ${a.type}">${REGION_TYPE_LABELS[a.type]}</span>
+    </div>
+  `).join('');
+}
+
+function selectAddr(full, type){
+  document.getElementById('addrSearch').value='';
+  document.getElementById('addrResult').style.display='none';
+  const selBox=document.getElementById('addrSelected');
+  selBox.style.display='flex';
+  document.getElementById('addrSelectedName').textContent=full;
+  setRegion(type);
+}
+
+function clearAddrSearch(){
+  document.getElementById('addrSearch').value='';
+  document.getElementById('addrResult').style.display='none';
+  document.getElementById('addrSelected').style.display='none';
+}
+
+// 검색창 외부 클릭 시 닫기
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.addr-search-wrap')){
+    const r=document.getElementById('addrResult');
+    if(r) r.style.display='none';
+  }
+});
+
+/* ── 지역/주택/단계 토글 ── */
+function setRegion(r){
+  currentRegion=r;
+  ['regulated','metro','local'].forEach(x=>document.getElementById('btn-'+x).classList.remove('active-blue'));
+  document.getElementById('btn-'+r).classList.add('active-blue');
+  document.getElementById('regulatedInfo').style.display=r==='regulated'?'block':'none';
+  document.getElementById('metroInfo').style.display=r==='metro'?'block':'none';
+  document.getElementById('localInfo').style.display=r==='local'?'block':'none';
+  const ts=document.getElementById('term');
+  if(r==='local'){ts.options[3].text='40년';ts.options[3].disabled=false;}
+  else{ts.options[3].text='40년 (수도권·규제지역 불가)';if(ts.value==='40')ts.value='30';}
+  calc();
+}
+
+function setHousing(h){
+  currentHousing=h;
+  ['first','none'].forEach(x=>document.getElementById('btn-'+x).classList.remove('active-teal'));
+  document.getElementById('btn-'+h).classList.add('active-teal');
+  calc();
+}
+
+function setPhase(ph){
+  currentPhase=ph;
+  [0,1,2].forEach(x=>document.getElementById('btn-phase'+x).classList.remove('active-blue'));
+  document.getElementById('btn-phase'+ph).classList.add('active-blue');
+  calc();
+}
+
+function setRepayMethod(m){
+  currentRepayMethod=m;
+  ['equal-pmt','equal-pri','bullet','graduated'].forEach(x=>document.getElementById('rtab-'+x).classList.remove('active'));
+  document.getElementById('rtab-'+m).classList.add('active');
+  currentPage=1;
+  if(lastCalcParams && lastCalcParams.finalLoan>0){
+    allYearRows=buildSchedule(lastCalcParams.finalLoan, lastCalcParams.rate, lastCalcParams.effectiveTerm, currentRepayMethod);
+    updateRepayStats(lastCalcParams.finalLoan, lastCalcParams.rate, lastCalcParams.effectiveTerm, allYearRows);
+  }
+  renderRepayTable();
+}
+
+/* ── 기존 대출 ── */
+
+// 대출 종류별 설정
+const LOAN_TYPES = {
+  'mortgage':  { label:'주택담보대출',   methods:['equal-pmt','equal-pri','bullet'], defaultMethod:'equal-pmt', hasTerm:true,  placeholder:'예: 20000' },
+  'credit':    { label:'신용대출',        methods:['equal-pmt','bullet'],             defaultMethod:'equal-pmt', hasTerm:true,  placeholder:'예: 3000'  },
+  'minus':     { label:'마이너스통장',    methods:['minus'],                          defaultMethod:'minus',     hasTerm:false, placeholder:'예: 2000'  },
+  'auto':      { label:'자동차할부',      methods:['equal-pmt','equal-pri'],          defaultMethod:'equal-pmt', hasTerm:true,  placeholder:'예: 2000'  },
+  'jeonse':    { label:'전세자금대출',    methods:['bullet'],                         defaultMethod:'bullet',    hasTerm:true,  placeholder:'예: 10000' },
+  'student':   { label:'학자금대출',      methods:['equal-pmt'],                      defaultMethod:'equal-pmt', hasTerm:true,  placeholder:'예: 1000'  },
+  'card':      { label:'카드론/현금서비스',methods:['equal-pmt'],                     defaultMethod:'equal-pmt', hasTerm:true,  placeholder:'예: 500'   },
+};
+
+const METHOD_LABELS = {
+  'equal-pmt':'원리금균등',
+  'equal-pri':'원금균등',
+  'bullet':'만기일시(이자만)',
+  'minus':'한도잔액 이자',
+};
+
+function getLoanTypeHtml(id) {
+  return Object.entries(LOAN_TYPES).map(([k,v])=>
+    `<option value="${k}">${v.label}</option>`
+  ).join('');
+}
+
+function getMethodHtml(type) {
+  const cfg = LOAN_TYPES[type] || LOAN_TYPES['mortgage'];
+  return cfg.methods.map(m=>
+    `<option value="${m}"${m===cfg.defaultMethod?' selected':''}>${METHOD_LABELS[m]}</option>`
+  ).join('');
+}
+
+function onLoanTypeChange(id) {
+  const type = document.getElementById('ltype-'+id)?.value || 'mortgage';
+  const cfg = LOAN_TYPES[type];
+
+  // 상환방식 옵션 교체
+  const methodSel = document.getElementById('lm-'+id);
+  if(methodSel) methodSel.innerHTML = getMethodHtml(type);
+
+  // 잔여기간 필드 show/hide
+  const termField = document.getElementById('lterm-field-'+id);
+  if(termField) termField.style.display = cfg.hasTerm ? '' : 'none';
+
+  // 마이너스통장: 잔액 라벨 변경
+  const balLabel = document.getElementById('lbal-label-'+id);
+  if(balLabel) balLabel.textContent = type==='minus' ? '현재 사용 잔액 (만원)' : '대출 잔액 (만원)';
+
+  // placeholder
+  const balInput = document.getElementById('lb-'+id);
+  if(balInput) balInput.placeholder = cfg.placeholder;
+
+  // 타이틀
+  const title = document.getElementById('ltitle-'+id);
+  if(title) title.textContent = cfg.label;
+
+  calcLoan(id);
+}
+
+function addLoan(){
+  loanCount++;
+  const id=loanCount;
+  const div=document.createElement('div');
+  div.className='exist-loan'; div.id='loan-'+id;
+  div.innerHTML=`
+    <div class="exist-loan-header">
+      <span class="exist-loan-title" id="ltitle-${id}">기존 대출 ${id}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="exist-loan-result" id="lr-${id}">연 0만원</span>
+        <button class="btn-del" onclick="removeLoan(${id})">×</button>
+      </div>
+    </div>
+    <div class="exist-loan-field" style="margin-bottom:7px;">
+      <label>대출 종류</label>
+      <select id="ltype-${id}" onchange="onLoanTypeChange(${id})">
+        ${getLoanTypeHtml(id)}
+      </select>
+    </div>
+    <div class="exist-loan-grid">
+      <div class="exist-loan-field">
+        <label id="lbal-label-${id}">대출 잔액 (만원)</label>
+        <input type="number" id="lb-${id}" placeholder="예: 20000" step="100" min="0" oninput="calcLoan(${id})">
+      </div>
+      <div class="exist-loan-field">
+        <label>금리 (%)</label>
+        <input type="number" id="lr2-${id}" placeholder="예: 4.5" step="0.1" min="0.1" value="4.5" oninput="calcLoan(${id})">
+      </div>
+      <div class="exist-loan-field" id="lterm-field-${id}">
+        <label>잔여 기간 (년)</label>
+        <input type="number" id="lt-${id}" placeholder="예: 20" step="1" min="1" value="20" oninput="calcLoan(${id})">
+      </div>
+      <div class="exist-loan-field">
+        <label>상환 방식</label>
+        <select id="lm-${id}" onchange="calcLoan(${id})">
+          ${getMethodHtml('mortgage')}
+        </select>
+      </div>
+    </div>
+    <div class="exist-loan-total">
+      <span class="tlabel">연간 원리금 상환액 (DSR 반영)</span>
+      <span class="tval" id="lt2-${id}">— 만원/년</span>
+    </div>
+  `;
+  document.getElementById('existingLoans').appendChild(div);
+  calcLoan(id);
+}
+
+function calcLoanAnnual(bal, r, yrs, method){
+  const mr = r/100/12;
+  const n  = yrs * 12;
+  if(bal <= 0) return 0;
+  if(method === 'equal-pmt'){
+    const mp = mr===0 ? bal/n : bal*mr*Math.pow(1+mr,n)/(Math.pow(1+mr,n)-1);
+    return mp * 12;
+  } else if(method === 'equal-pri'){
+    // 첫해 기준 (원금균등은 매년 감소하므로 첫해가 최대)
+    return (bal/n + bal*mr) * 12;
+  } else if(method === 'bullet' || method === 'minus'){
+    // 이자만 납부
+    return bal * mr * 12;
+  }
+  return 0;
+}
+
+function calcLoan(id){
+  const bal    = parseFloat(document.getElementById('lb-'+id)?.value)||0;
+  const r      = parseFloat(document.getElementById('lr2-'+id)?.value)||4.5;
+  const yrs    = parseInt(document.getElementById('lt-'+id)?.value)||20;
+  const method = document.getElementById('lm-'+id)?.value||'equal-pmt';
+  const annualPmt = calcLoanAnnual(bal, r, yrs, method);
+  const el  = document.getElementById('lr-'+id);
+  const el2 = document.getElementById('lt2-'+id);
+  if(el)  el.textContent  = '연 '+Math.round(annualPmt).toLocaleString()+'만원';
+  if(el2) el2.textContent = Math.round(annualPmt).toLocaleString()+'만원/년';
+  calc();
+}
+
+function removeLoan(id){const el=document.getElementById('loan-'+id);if(el)el.remove();calc();}
+
+function getExisting(){
+  let total=0;
+  document.querySelectorAll('[id^="loan-"]').forEach(loan=>{
+    const id=loan.id.replace('loan-','');
+    const bal=parseFloat(document.getElementById('lb-'+id)?.value)||0;
+    const r=parseFloat(document.getElementById('lr2-'+id)?.value)||4.5;
+    const yrs=parseInt(document.getElementById('lt-'+id)?.value)||20;
+    const method=document.getElementById('lm-'+id)?.value||'equal-pmt';
+    const annualPmt = calcLoanAnnual(bal, r, yrs, method);
+    total += annualPmt;
+  });
+  // 기존 대출 합계 요약 업데이트
+  const summary=document.getElementById('existingSummary');
+  const loanCount2=document.querySelectorAll('[id^="loan-"]').length;
+  if(loanCount2>0&&total>0){
+    summary.style.display='block';
+    summary.innerHTML=`<strong>기존 대출 연간 원리금 합계:</strong> ${Math.round(total).toLocaleString()}만원/년 (${loanCount2}건)`;
+  }else{
+    summary.style.display='none';
+  }
+  return total;
+}
+
+/* ── 금융 계산 ── */
+function calcMaxLoanEqualPmt(pmt,r,y){
+  const mr=r/100/12,n=y*12,mp=pmt/12;
+  if(mr===0)return mp*n;
+  return mp*(1-Math.pow(1+mr,-n))/mr;
+}
+function calcAnnualPmtEqualPmt(p,r,y){
+  const mr=r/100/12,n=y*12;
+  if(mr===0)return p/y;
+  return p*mr*Math.pow(1+mr,n)/(Math.pow(1+mr,n)-1)*12;
+}
+
+function fmtLabel(v){
+  if(v>=10000){const uk=Math.floor(v/10000),rem=Math.round(v%10000);return rem>0?`${uk}억 ${rem.toLocaleString()}만`:`${uk}억`;}
+  return Math.round(v).toLocaleString()+'만';
+}
+function fmtFull(v){
+  if(v<0)return '0만원';
+  if(v>=10000){const uk=Math.floor(v/10000),rem=Math.round(v%10000);return rem>0?`${uk}억 ${rem.toLocaleString()}만원`:`${uk}억원`;}
+  return Math.round(v).toLocaleString()+'만원';
+}
+function fmtWon(v){return Math.round(v).toLocaleString()+'만원';}
+function fmtMonthly(v){return Math.round(v/12).toLocaleString()+'만원';}
+
+/* ── 상환방식별 월별(회차별) 스케줄 생성 ── */
+function buildSchedule(principal, annualRate, termYears, method){
+  const r = annualRate / 100 / 12;   // 월 이율
+  const n = termYears * 12;           // 총 회차
+  const rows = [];
+  let bal = principal;
+
+  if(method === 'equal-pmt'){
+    // 원리금균등분할: 매월 동일 상환액
+    const monthlyPmt = r === 0 ? principal/n : principal*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+    for(let i=1; i<=n; i++){
+      const interest = bal * r;
+      const prin = Math.min(monthlyPmt - interest, bal);
+      bal = Math.max(0, bal - prin);
+      rows.push({seq:i, pmt:monthlyPmt, principal:prin, interest:interest, balance:bal});
+    }
+    rows._monthly1st = monthlyPmt;
+
+  }else if(method === 'equal-pri'){
+    // 원금균등분할: 매월 원금 동일, 이자는 감소
+    const monthlyPrincipal = principal / n;
+    for(let i=1; i<=n; i++){
+      const interest = bal * r;
+      const prin = Math.min(monthlyPrincipal, bal);
+      const pmt = prin + interest;
+      bal = Math.max(0, bal - prin);
+      rows.push({seq:i, pmt:pmt, principal:prin, interest:interest, balance:bal});
+    }
+    rows._monthly1st = monthlyPrincipal + principal * r;
+
+  }else if(method === 'bullet'){
+    // 만기일시상환: 매월 이자만, 만기 회차에 원금 전액
+    const monthlyInterest = principal * r;
+    for(let i=1; i<=n; i++){
+      const isLast = (i === n);
+      const prin = isLast ? bal : 0;
+      const pmt = monthlyInterest + prin;
+      bal = isLast ? 0 : bal;
+      rows.push({seq:i, pmt:pmt, principal:prin, interest:monthlyInterest, balance:Math.max(0, bal-prin), note: isLast?'원금상환':null});
+    }
+    rows._monthly1st = monthlyInterest;
+
+  }else if(method === 'graduated'){
+    // 체증식: 거치기간(이자만) 후 원리금균등
+    const graceMonths = Math.min(60, Math.floor(n * 0.2));
+    const repayMonths = n - graceMonths;
+    const monthlyInterest = principal * r;
+    // 거치기간
+    for(let i=1; i<=graceMonths; i++){
+      rows.push({seq:i, pmt:monthlyInterest, principal:0, interest:monthlyInterest, balance:bal, note:'거치'});
+    }
+    // 상환기간: 잔여 원금을 잔여 회차로 원리금균등
+    const mp2 = r===0 ? bal/repayMonths : bal*r*Math.pow(1+r,repayMonths)/(Math.pow(1+r,repayMonths)-1);
+    for(let i=graceMonths+1; i<=n; i++){
+      const interest = bal * r;
+      const prin = Math.min(mp2 - interest, bal);
+      bal = Math.max(0, bal - prin);
+      rows.push({seq:i, pmt:mp2, principal:prin, interest:interest, balance:bal});
+    }
+    rows._monthly1st = monthlyInterest;
+    rows._graceMonths = graceMonths;
+  }
+
+  return rows;
+}
+
+/* ── 상환 테이블 렌더 (회차별) ── */
+function fmtWonM(v){ // v는 만원 단위 (소수 포함 가능)
+  if(v < 0) return '0만원';
+  if(v >= 10000){
+    const uk = Math.floor(v/10000);
+    const rem = (v % 10000);
+    return rem >= 0.05 ? `${uk}억 ${rem.toFixed(0)}만원` : `${uk}억원`;
+  }
+  return v.toFixed(1)+'만원';
+}
+function renderRepayTable(){
+  const tbody=document.getElementById('repayTbody');
+  if(!allYearRows||allYearRows.length===0){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--text-faint);padding:16px;">대출 금액을 먼저 계산해 주세요</td></tr>';return;}
+
+  const totalPages=Math.ceil(allYearRows.length/PAGE_SIZE);
+  currentPage=Math.max(1,Math.min(currentPage,totalPages));
+  document.getElementById('pageInfo').textContent=`${currentPage} / ${totalPages}`;
+  document.getElementById('pageLabel').textContent=`${currentPage}페이지`;
+  document.getElementById('btnPrev').disabled=currentPage<=1;
+  document.getElementById('btnNext').disabled=currentPage>=totalPages;
+
+  const start=(currentPage-1)*PAGE_SIZE;
+  const slice=allYearRows.slice(start,start+PAGE_SIZE);
+
+  let html='';
+  slice.forEach(r=>{
+    const noteStr=r.note?` <span style="font-size:9px;background:#FAEEDA;color:#633806;padding:1px 4px;border-radius:3px;">${r.note}</span>`:'';
+    const yearLabel = Math.ceil(r.seq/12)+'년 '+((r.seq-1)%12+1)+'월';
+    html+=`<tr>
+      <td>${r.seq}회차<br><span style="font-size:10px;color:var(--text-faint)">${yearLabel}</span>${noteStr}</td>
+      <td>${fmtWonM(r.pmt)}</td>
+      <td>${fmtWonM(r.principal)}</td>
+      <td>${fmtWonM(r.interest)}</td>
+      <td>${fmtWonM(r.balance)}</td>
+    </tr>`;
+  });
+
+  // 마지막 페이지에 합계행
+  if(currentPage===totalPages){
+    const totPmt=allYearRows.reduce((a,r)=>a+r.pmt,0);
+    const totPri=allYearRows.reduce((a,r)=>a+r.principal,0);
+    const totInt=allYearRows.reduce((a,r)=>a+r.interest,0);
+    html+=`<tr class="sum-row">
+      <td>합계</td>
+      <td>${fmtWonM(totPmt)}</td>
+      <td>${fmtWonM(totPri)}</td>
+      <td>${fmtWonM(totInt)}</td>
+      <td>—</td>
+    </tr>`;
+  }
+  tbody.innerHTML=html;
+}
+
+function changePage(dir){currentPage+=dir;renderRepayTable();}
+
+/* ── 바 라벨 플러그인 ── */
+const dataLabelPlugin={
+  id:'dataLabels',
+  afterDatasetsDraw(chart){
+    const{ctx}=chart;
+    chart.data.datasets.forEach((ds,di)=>{
+      const meta=chart.getDatasetMeta(di);
+      if(meta.hidden)return;
+      meta.data.forEach((bar,i)=>{
+        const val=ds.data[i];
+        if(!val||val===0)return;
+        const label=ds._labelFmt?ds._labelFmt(val):String(val);
+        ctx.save();
+        ctx.font='500 11px "Noto Sans KR",sans-serif';
+        ctx.fillStyle='#ffffff';ctx.textAlign='center';ctx.textBaseline='middle';
+        const{x,y,base}=bar;
+        if(chart.options.indexAxis==='y'){
+          const bw=Math.abs(x-base);if(bw>55)ctx.fillText(label,base+bw/2,y);
+        }else{
+          const bh=Math.abs(y-base);if(bh>26)ctx.fillText(label,x,y+bh/2);
+        }
+        ctx.restore();
+      });
+    });
+  }
+};
+Chart.register(dataLabelPlugin);
+let barChartObj=null,dsrChartObj=null,repayChartObj=null;
+
+/* ── 메인 계산 ── */
+function calc(){
+  const income=parseFloat(document.getElementById('income').value)||0;
+  const housePrice=parseFloat(document.getElementById('housePrice').value)||0;
+  const rate=parseFloat(document.getElementById('rate').value)||4.0;
+  const term=parseInt(document.getElementById('term').value)||30;
+  const dsrLimitPct=parseInt(document.getElementById('dsrLimit').value)||40;
+  const existing=getExisting();
+
+  const p=REGION_PARAMS[currentRegion];
+  const effectiveTerm=term; // 대출기간은 select UI에서 지역별로 제어됨
+  const phaseRatio=p.phaseRatios[currentPhase];
+  const stressAdd=parseFloat((p.stressBase*phaseRatio).toFixed(2));
+  const stressRate=parseFloat((rate+stressAdd).toFixed(2));
+
+  document.getElementById('s-rate').textContent=rate.toFixed(2)+'%';
+  document.getElementById('s-base').textContent=p.stressBase.toFixed(2)+'%p ('+p.label+')';
+  document.getElementById('s-add').textContent=(stressAdd>0?'+':'')+stressAdd.toFixed(2)+'%p ('+PHASE_LABELS[currentPhase]+')';
+  document.getElementById('s-total').textContent=stressRate.toFixed(2)+'%';
+
+  const kbPrice=parseFloat(document.getElementById('kbPrice').value)||0;
+  // LTV 기준가: 매매가와 KB시세 중 낮은 값 (KB시세 미입력 시 매매가 기준)
+  const ltvBasis = (kbPrice>0) ? Math.min(housePrice, kbPrice) : housePrice;
+  const ltvPct=(currentHousing==='first')?p.ltvFirst:p.ltvNormal;
+  const ltvMax=ltvBasis*(ltvPct/100);
+
+  // KB시세 안내 업데이트
+  const kbNotice=document.getElementById('kbNotice');
+  const kbBasisLabel=document.getElementById('kbBasisLabel');
+  if(kbPrice>0){
+    kbNotice.style.display='block';
+    const basis = ltvBasis===kbPrice&&kbPrice<housePrice ? 'KB시세' : '매매가';
+    kbBasisLabel.textContent = basis+' 기준';
+    kbBasisLabel.style.color = ltvBasis===kbPrice&&kbPrice<housePrice ? '#854F0B' : '#185FA5';
+    document.getElementById('kbNoticeSale').textContent=fmtFull(housePrice);
+    document.getElementById('kbNoticeKB').textContent=fmtFull(kbPrice);
+    document.getElementById('kbNoticeBasis').textContent=fmtFull(ltvBasis);
+  }else{
+    kbNotice.style.display='none';
+    kbBasisLabel.textContent='';
+  }
+
+  let absCapMan=null;
+  if(p.hasAbsCap){absCapMan=getAbsCap(housePrice);} // 절대상한은 실제 매매가 기준
+
+  const maxAnnual=income*(dsrLimitPct/100);
+  const available=Math.max(0,maxAnnual-existing);
+  const dsrMax=calcMaxLoanEqualPmt(available,stressRate,effectiveTerm);
+
+  const absCap=absCapMan!==null?absCapMan:Infinity;
+  const finalLoan=Math.min(ltvMax,dsrMax,absCap);
+
+  const vals=[{name:'LTV',v:ltvMax},{name:'DSR',v:dsrMax}];
+  if(absCapMan!==null)vals.push({name:'10.15 절대상한',v:absCapMan});
+  const minVal=Math.min(...vals.map(x=>x.v));
+  const bindingFactors=vals.filter(x=>Math.abs(x.v-minVal)<1).map(x=>x.name);
+
+  const newAnnualPmt=finalLoan>0?calcAnnualPmtEqualPmt(finalLoan,stressRate,effectiveTerm):0;
+  const existDsrPct=income>0?(existing/income*100):0;
+  const newDsrPct=income>0?(newAnnualPmt/income*100):0;
+  const remDsrPct=Math.max(0,dsrLimitPct-existDsrPct-newDsrPct);
+
+  // 지표 업데이트
+  document.getElementById('ltvResult').textContent=fmtFull(ltvMax);
+  const basisLabel2 = (kbPrice>0&&kbPrice<housePrice)?'KB시세':'매매가';
+  document.getElementById('ltvSub').textContent=`${p.label} LTV ${ltvPct}% · ${basisLabel2} ${fmtFull(ltvBasis)} 기준${currentHousing==='first'?' (생애최초)':''}`;
+  document.getElementById('dsrResult').textContent=available>0?fmtFull(dsrMax):'추가 불가';
+  document.getElementById('dsrSub').textContent=available>0?`산정금리 ${stressRate.toFixed(2)}%, ${effectiveTerm}년`:'한도 초과';
+
+  if(absCapMan!==null){
+    document.getElementById('capResult').textContent=fmtFull(absCapMan);
+    const hp=housePrice/10000;
+    document.getElementById('capSub').textContent=hp<=15?'15억 이하 → 6억 상한':hp<=25?'15~25억 → 4억 상한':'25억 초과 → 2억 상한';
+    document.getElementById('capAlert').style.display='block';
+    document.getElementById('capAlertDetail').textContent=`매매가 ${fmtFull(housePrice)} → 주담대 최대 ${fmtFull(absCapMan)} (수도권·규제지역 10.15 대책)`;
+  }else{
+    document.getElementById('capResult').textContent='해당 없음';
+    document.getElementById('capSub').textContent=currentRegion==='local'?'지방 비해당':'수도권 비규제';
+    document.getElementById('capAlert').style.display='none';
+  }
+
+  document.getElementById('availResult').textContent=available>0?fmtFull(available)+'/년':'0만원';
+
+  document.getElementById('finalCard').className='final-card '+(finalLoan>0?'normal':'impossible');
+  document.getElementById('finalVal').textContent=finalLoan>0?fmtFull(finalLoan):'대출 불가';
+  document.getElementById('finalSub').textContent=finalLoan>0
+    ?`${bindingFactors.join(' · ')} 한도 적용 · ${effectiveTerm}년 기준`
+    :'기존 대출 상환액이 DSR 한도를 초과하였습니다';
+  const bp=vals.map(v=>`<span>${v.name} ${fmtFull(v.v)}</span>`).join('');
+  document.getElementById('finalBound').innerHTML=bp;
+
+  const badge=document.getElementById('badge');
+  if(existDsrPct>=dsrLimitPct){badge.textContent='한도 초과';badge.className='badge over';}
+  else if(existDsrPct>=dsrLimitPct*0.8){badge.textContent='주의';badge.className='badge warn';}
+  else{badge.textContent='여유';badge.className='badge ok';}
+
+  // 상환 스케줄 (실제금리로, 실제 납부 기준)
+  lastCalcParams = { finalLoan, rate, effectiveTerm };
+  if(finalLoan>0){
+    allYearRows=buildSchedule(finalLoan, rate, effectiveTerm, currentRepayMethod);
+    updateRepayStats(finalLoan, rate, effectiveTerm, allYearRows);
+  }else{
+    allYearRows=[];
+  }
+  currentPage=1;
+  renderRepayTable();
+  updateCharts(ltvMax,dsrMax,finalLoan,absCapMan,existDsrPct,newDsrPct,remDsrPct,existing,newAnnualPmt,maxAnnual,dsrLimitPct);
+}
+
+function fmtWonFull(v){
+  // v는 만원 단위 (소수 포함)
+  if(v<0) return '0만원';
+  if(v>=10000){const uk=Math.floor(v/10000),rem=Math.round(v%10000);return rem>0?`${uk}억 ${rem.toLocaleString()}만원`:`${uk}억원`;}
+  return Math.round(v).toLocaleString()+'만원';
+}
+function updateRepayStats(principal, rate, term, rows){
+  const totInt=rows.reduce((a,r)=>a+r.interest,0);
+  const totPmt=rows.reduce((a,r)=>a+r.pmt,0);
+  const monthly1st=rows._monthly1st||0;
+
+  document.getElementById('rm-first').textContent=fmtWonFull(monthly1st);
+  document.getElementById('rm-first-sub').textContent='1회차 상환액';
+  document.getElementById('rm-interest').textContent=fmtWonFull(totInt);
+  document.getElementById('rm-int-sub').textContent=`${rows.length}회차 이자 합계`;
+  document.getElementById('rm-total').textContent=fmtWonFull(totPmt);
+  document.getElementById('rm-total-sub').textContent='원금+이자 총합계';
+
+  const graceM = rows._graceMonths || 0;
+  const notes={
+    'equal-pmt':'매월 동일한 금액을 납부합니다. 초기에는 이자 비중이 높고 시간이 지날수록 원금 비중이 커집니다.',
+    'equal-pri':'매월 원금을 동일하게 상환하므로 초기 납부액이 가장 높지만 매월 감소합니다. 총 이자 부담이 원리금균등보다 적습니다.',
+    'bullet':'만기까지 매월 이자만 납부하고 마지막 회차에 원금 전액을 상환합니다. 월 부담은 가장 적지만 총 이자가 가장 많습니다.',
+    'graduated':`초기 ${graceM}회차(${Math.round(graceM/12)}년)는 이자만 납부하는 거치기간이며, 이후 원리금 균등상환합니다. 초기 부담이 낮아 소득 증가가 예상될 때 유리합니다.`
+  };
+  document.getElementById('repayNote').textContent=notes[currentRepayMethod]||'';
+}
+
+/* ── 차트 ── */
+function updateCharts(ltvMax,dsrMax,finalLoan,absCap,existDsr,newDsr,remDsr,existAnnual,newAnnual,maxAnnual,dsrLimitPct){
+  if(barChartObj)barChartObj.destroy();
+  const bLabels=['LTV 한도','DSR 한도','실제 대출 가능'];
+  const bData=[Math.round(ltvMax),Math.round(Math.max(0,dsrMax)),Math.round(finalLoan)];
+  const bColors=['#185FA5','#1D9E75','#D85A30'];
+  if(absCap!==null){bLabels.push('절대 상한');bData.push(Math.round(absCap));bColors.push('rgba(216,90,48,0.38)');}
+  barChartObj=new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{labels:bLabels,datasets:[{data:bData,backgroundColor:bColors,borderRadius:5,borderSkipped:false,_labelFmt:v=>fmtLabel(v)+'원'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+fmtLabel(ctx.raw)+'원'}}},
+      scales:{x:{grid:{display:false},ticks:{color:'#888780',font:{size:11,family:"'Noto Sans KR'"}}},
+              y:{grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:10},callback:v=>fmtLabel(v)}}}}
+  });
+
+  if(dsrChartObj)dsrChartObj.destroy();
+  dsrChartObj=new Chart(document.getElementById('dsrChart'),{
+    type:'bar',
+    data:{labels:[`DSR 현황 (한도 ${dsrLimitPct}%)`],datasets:[
+      {label:'기존',data:[parseFloat(existDsr.toFixed(1))],backgroundColor:'#185FA5',borderRadius:0,stack:'d',_labelFmt:v=>v.toFixed(1)+'%'},
+      {label:'신규',data:[parseFloat(newDsr.toFixed(1))],backgroundColor:'#1D9E75',borderRadius:0,stack:'d',_labelFmt:v=>v.toFixed(1)+'%'},
+      {label:'여력',data:[parseFloat(remDsr.toFixed(1))],backgroundColor:'#D3D1C7',borderRadius:4,stack:'d',_labelFmt:v=>v.toFixed(1)+'%'}
+    ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)}%`}}},
+      scales:{x:{stacked:true,max:dsrLimitPct,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:10},callback:v=>v+'%'}},
+              y:{stacked:true,grid:{display:false},ticks:{color:'#888780',font:{size:11,family:"'Noto Sans KR'"}}}}}
+  });
+
+  if(repayChartObj)repayChartObj.destroy();
+  const remAnnual=Math.max(0,maxAnnual-existAnnual-newAnnual);
+  repayChartObj=new Chart(document.getElementById('repayChart'),{
+    type:'bar',
+    data:{labels:['연간 상환액'],datasets:[
+      {label:'기존',data:[Math.round(existAnnual)],backgroundColor:'#185FA5',borderRadius:0,stack:'r',_labelFmt:v=>fmtLabel(v)},
+      {label:'신규',data:[Math.round(newAnnual)],backgroundColor:'#1D9E75',borderRadius:0,stack:'r',_labelFmt:v=>fmtLabel(v)},
+      {label:'여유',data:[Math.round(remAnnual)],backgroundColor:'#D3D1C7',borderRadius:4,stack:'r',_labelFmt:v=>fmtLabel(v)}
+    ]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${fmtLabel(ctx.raw)}원`}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{color:'#888780',font:{size:10},callback:v=>fmtLabel(v)}},
+              y:{stacked:true,grid:{display:false},ticks:{color:'#888780',font:{size:11,family:"'Noto Sans KR'"}}}}}
+  });
+}
+
+setRegion('metro');
+calc();
+</script>
+</body>
+</html>
